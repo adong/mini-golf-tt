@@ -36,7 +36,7 @@
     sun.shadow.normalBias = 0.02;
     scene.add(sun, sun.target);
     // the garden lawn under everything, and a few clouds
-    groundMesh = new T.Mesh(new T.PlaneGeometry(220, 220), std('#7fd46a', { map: grassTex('#7fd46a'), roughness: 1 }));
+    groundMesh = new T.Mesh(new T.PlaneGeometry(220, 220), std('#7fd46a', { map: grassTex('#ffffff'), roughness: 1 }));
     groundMesh.material.map.repeat.set(70, 70);
     groundMesh.rotation.x = -Math.PI / 2;
     groundMesh.position.y = -0.35;
@@ -92,17 +92,17 @@
     g.fillStyle = base;
     g.fillRect(0, 0, 128, 128);
     for (let i = 0; i < 700; i++) {
-      g.fillStyle = `rgba(${Math.random() < 0.4 ? '255,255,200' : '20,80,20'},${0.08 + Math.random() * 0.1})`;
+      g.fillStyle = `rgba(${Math.random() < 0.4 ? '255,255,255' : '40,60,40'},${0.08 + Math.random() * 0.1})`;
       g.fillRect(Math.random() * 128, Math.random() * 128, 1.5, 3);
     }
     return toTexture(c, true);
   }
-  function sandTex(base) {
+  function sandTex(base, grain) {
     const [c, g] = makeCanvas(128, 128);
     g.fillStyle = base;
     g.fillRect(0, 0, 128, 128);
     for (let i = 0; i < 900; i++) {
-      g.fillStyle = `rgba(${Math.random() < 0.5 ? '255,255,255' : '140,100,40'},${0.15 + Math.random() * 0.2})`;
+      g.fillStyle = `rgba(${Math.random() < 0.5 ? '255,255,255' : grain || '140,100,40'},${0.15 + Math.random() * 0.2})`;
       g.fillRect(Math.random() * 128, Math.random() * 128, 2, 2);
     }
     return toTexture(c, true);
@@ -318,7 +318,7 @@
     }
     // sand
     if (H.sand.length) {
-      const sm = std('#ffffff', { map: sandTex(theme.sand), roughness: 1 });
+      const sm = std('#ffffff', { map: sandTex(theme.sand, theme.props === 'candy' ? '255,120,190' : null), roughness: theme.props === 'candy' ? 0.5 : 1 });
       sm.map.repeat.set(1, 1);
       for (const s of H.sand) {
         const pos = [], uv = [];
@@ -357,7 +357,7 @@
     // bumpers (red mushrooms with white spots) and rocks
     const capMat = std('#ffffff', { map: dotsTex(theme.bumper || '#ff4b5c', '#ffffff'), roughness: 0.5 });
     const stemMat = std('#fff6e6');
-    const rockMat = std('#a9a9b8', { roughness: 0.9, flatShading: true });
+    const rockMat = std(theme.rock || '#a9a9b8', { roughness: theme.rock ? 0.35 : 0.9, flatShading: !theme.rock });
     for (const c of H.circles) {
       const h = hFn(c.x, c.z);
       if (c.kick) {
@@ -373,7 +373,7 @@
         g.add(grp);
         hole.bumpers.push({ c, grp, pop: 0 });
       } else {
-        const r = new T.Mesh(new T.DodecahedronGeometry(c.r * 1.05, 0), rockMat);
+        const r = new T.Mesh(theme.rock ? new T.SphereGeometry(c.r * 1.05, 18, 12) : new T.DodecahedronGeometry(c.r * 1.05, 0), rockMat);
         r.position.set(c.x, h + c.r * 0.35, c.z);
         r.scale.y = 0.75;
         r.rotation.y = c.x * 3 + c.z;
@@ -381,7 +381,7 @@
         g.add(r);
       }
     }
-    if (H.windmill) hole.windmill = buildWindmill(g, H.windmill, hFn);
+    if (H.windmill) hole.windmill = buildWindmill(g, H.windmill, hFn, theme);
     if (H.bridge) hole.bridge = buildBridge(g, H.bridge);
     if (H.loop) buildLoop(g, H.loop);
     if (H.def.tunnel) buildHill(g, H.def.tunnel, theme);
@@ -396,7 +396,7 @@
       g.add(m);
     }
     buildCup(g, H, number, theme);
-    garden(g, H, theme);
+    if (theme.props === 'candy') candyland(g, H, theme); else garden(g, H, theme);
     // shadows cover the whole hole
     const b = H.bounds, cx = (b.minx + b.maxx) / 2, cz = (b.minz + b.maxz) / 2;
     const span = Math.max(b.maxx - b.minx, b.maxz - b.minz) / 2 + 4;
@@ -444,10 +444,11 @@
     hole.cup = { group: cup, sizer, flag, cloth, lift: 0 };
   }
 
-  function buildWindmill(g, w, hFn) {
+  function buildWindmill(g, w, hFn, theme) {
     const x = w.x, face = w.face - 0.08, back = w.back, lane = w.lane, half = w.half;
     const depth = face - back, zc = (face + back) / 2, top = 2.2;
-    const wallMat = std('#f6e7cf'), trim = std('#d24a3a'), roofMat = std('#8a4cd6', { flatShading: true }), wood = std('#8a5a2b');
+    const look = theme.mill || {};
+    const wallMat = std(look.wall || '#f6e7cf'), trim = std(look.trim || '#d24a3a'), roofMat = std(look.roof || '#8a4cd6', { flatShading: true }), wood = std(look.trim ? '#ffffff' : '#8a5a2b');
     const box = (x0, x1, y0, y1, mat) => {
       const m = new T.Mesh(new T.BoxGeometry(x1 - x0, y1 - y0, depth), mat);
       m.position.set((x0 + x1) / 2, (y0 + y1) / 2, zc);
@@ -690,6 +691,112 @@
     }
   }
 
+  // ------------------------------------------------------------------ Candy Land round the course
+  function swirlTex(a, b) {
+    const key = 'swirl' + a + b;
+    if (texCache[key]) return texCache[key];
+    const [c, g] = makeCanvas(128, 128);
+    g.fillStyle = b;
+    g.fillRect(0, 0, 128, 128);
+    g.strokeStyle = a;
+    g.lineWidth = 9;
+    g.beginPath();
+    for (let t = 0; t < 6 * Math.PI; t += 0.1) g.lineTo(64 + Math.cos(t) * t * 3.3, 64 + Math.sin(t) * t * 3.3);
+    g.stroke();
+    return (texCache[key] = toTexture(c));
+  }
+  function stripeCaneTex() {
+    if (texCache.cane) return texCache.cane;
+    const [c, g] = makeCanvas(64, 64);
+    g.fillStyle = '#ffffff';
+    g.fillRect(0, 0, 64, 64);
+    g.fillStyle = '#ff3d5f';
+    for (let k = -64; k < 128; k += 32) { g.beginPath(); g.moveTo(k, 0); g.lineTo(k + 14, 0); g.lineTo(k + 14 + 64, 64); g.lineTo(k + 64, 64); g.fill(); }
+    return (texCache.cane = toTexture(c, true));
+  }
+  function candyland(g, H, theme) {
+    const rand = MG.checks.rng(H.def.name.length * 131 + 7);
+    const b = H.bounds, M = 3.4;
+    const x0 = b.minx - M, x1 = b.maxx + M, z0 = b.minz - M, z1 = b.maxz + M;
+    const near = (x, z, d) => {
+      for (let a = 0; a < 8; a++) if (H.areas.some((ar) => P.inPoly(ar, x + Math.cos(a) * d, z + Math.sin(a) * d))) return true;
+      return H.areas.some((ar) => P.inPoly(ar, x, z));
+    };
+    const COLS = ['#ff4f9a', '#ffd400', '#18d4ff', '#7ed957', '#b06bff', '#ff8a1f'];
+    // little lollipops and wrapped sweets scattered on the pink ground
+    const spots = [];
+    for (let i = 0; i < 400 && spots.length < 50; i++) {
+      const x = x0 + rand() * (x1 - x0), z = z0 + rand() * (z1 - z0);
+      if (!near(x, z, 0.55)) spots.push([x, z]);
+    }
+    const sticks = new T.InstancedMesh(new T.CylinderGeometry(0.025, 0.025, 0.55, 5).translate(0, 0.27, 0), std('#ffffff'), spots.length);
+    const pops = new T.InstancedMesh(new T.CylinderGeometry(0.17, 0.17, 0.06, 14).rotateX(Math.PI / 2).translate(0, 0.62, 0), std('#ffffff', { roughness: 0.3 }), spots.length);
+    const m = new T.Matrix4(), q = new T.Quaternion(), sc = new T.Vector3(1, 1, 1), pv = new T.Vector3(), up = new T.Vector3(0, 1, 0);
+    spots.forEach(([x, z], i) => {
+      q.setFromAxisAngle(up, rand() * Math.PI * 2);
+      m.compose(pv.set(x, -0.35, z), q, sc);
+      sticks.setMatrixAt(i, m);
+      pops.setMatrixAt(i, m);
+      pops.setColorAt(i, new T.Color(COLS[i % COLS.length]));
+    });
+    sticks.castShadow = pops.castShadow = true;
+    g.add(sticks, pops);
+    // gumdrops instead of bushes
+    for (let i = 0, n = 0; i < 300 && n < 12; i++) {
+      const x = x0 + rand() * (x1 - x0), z = z0 + rand() * (z1 - z0);
+      if (near(x, z, 1.0)) continue;
+      n++;
+      const r = 0.35 + rand() * 0.25;
+      const gd = new T.Mesh(new T.SphereGeometry(r, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), std(COLS[n % COLS.length], { roughness: 0.25, transparent: true, opacity: 0.92 }));
+      gd.scale.y = 1.3;
+      gd.position.set(x, -0.35, z);
+      gd.castShadow = true;
+      g.add(gd);
+    }
+    // giant lollipops and candy canes outside the fence
+    const stick = std('#ffffff');
+    const trees = [[x0 - 1.5, z0 + 2], [x1 + 1.6, z0 + 4], [x0 - 2, (z0 + z1) / 2], [x1 + 2, z1 - 3], [x0 - 1, z1 + 1.5], [x1 + 1, z0 - 1.5]];
+    trees.forEach(([x, z], i) => {
+      if (i % 3 === 2) {
+        const cane = new T.Group();
+        const tex = stripeCaneTex();
+        const mat = std('#ffffff', { map: tex, roughness: 0.4 });
+        const pole = new T.Mesh(new T.CylinderGeometry(0.16, 0.16, 3, 12), mat);
+        pole.position.y = 1.5;
+        const hook = new T.Mesh(new T.TorusGeometry(0.45, 0.16, 10, 18, Math.PI), mat);
+        hook.position.set(0.45, 3, 0);
+        cane.add(pole, hook);
+        cane.position.set(x, -0.35, z);
+        cane.rotation.y = i;
+        cane.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+        g.add(cane);
+        return;
+      }
+      const st = new T.Mesh(new T.CylinderGeometry(0.1, 0.1, 2.8, 8), stick);
+      st.position.set(x, -0.35 + 1.4, z);
+      const disc = new T.Mesh(new T.CylinderGeometry(1.1, 1.1, 0.22, 32), [std(COLS[i % COLS.length]), std('#ffffff', { map: swirlTex(COLS[i % COLS.length], '#ffffff'), roughness: 0.3 }), std('#ffffff', { map: swirlTex(COLS[i % COLS.length], '#ffffff'), roughness: 0.3 })]);
+      disc.rotation.x = Math.PI / 2;
+      disc.position.set(x, -0.35 + 3.6, z);
+      disc.lookAt(cam.pos.x, disc.position.y, cam.pos.z);
+      disc.rotateX(Math.PI / 2);
+      st.castShadow = disc.castShadow = true;
+      g.add(st, disc);
+    });
+    // a candy-cane fence: red and white posts
+    const post = new T.CylinderGeometry(0.06, 0.06, 0.75, 6).translate(0, 0.37, 0);
+    const per = 2 * (x1 - x0 + z1 - z0), n = Math.floor(per / 0.32);
+    const fence = new T.InstancedMesh(post, std('#ffffff', { roughness: 0.4 }), n);
+    for (let i = 0; i < n; i++) {
+      let d = i * 0.32, x, z;
+      if (d < x1 - x0) { x = x0 + d; z = z0; } else if ((d -= x1 - x0) < z1 - z0) { x = x1; z = z0 + d; } else if ((d -= z1 - z0) < x1 - x0) { x = x1 - d; z = z1; } else { d -= x1 - x0; x = x0; z = z1 - d; }
+      m.makeTranslation(x, -0.35, z);
+      fence.setMatrixAt(i, m);
+      fence.setColorAt(i, new T.Color(i % 2 ? '#ffffff' : '#ff3d5f'));
+    }
+    fence.castShadow = true;
+    g.add(fence);
+  }
+
   function clouds() {
     const mat = new T.MeshStandardMaterial({ color: '#ffffff', roughness: 1, emissive: '#ffffff', emissiveIntensity: 0.35 });
     const rand = MG.checks.rng(5);
@@ -826,7 +933,7 @@
   const CONF = ['#ff3d7f', '#ffd400', '#18d4ff', '#3fe0b0', '#ff8a1f', '#9b6bff', '#ffffff'];
   const fx = {
     confetti(x, y, z) { emit('c', x, y + 0.5, z, 160, { speed: 3.2, up: 7, life: 2.6, color: CONF, gravity: 5, drag: 1.6, spread: 0.6 }); },
-    splash(x, y, z) { emit('d', x, y, z, 40, { speed: 1.6, up: 3.6, life: 0.9, color: ['#ffffff', '#bfe9ff', '#7fd0ff'], size: 1 }); },
+    splash(x, y, z) { emit('d', x, y, z, 40, { speed: 1.6, up: 3.6, life: 0.9, color: (hole && hole.theme.splash) || ['#ffffff', '#bfe9ff', '#7fd0ff'], size: 1 }); },
     sand(x, y, z) { emit('d', x, y, z, 18, { speed: 0.9, up: 1.6, life: 0.6, color: ['#f6dc92', '#e8c46a', '#fff1c4'], size: 0.8 }); },
     poof(x, y, z) { emit('d', x, y + 0.6, z, 30, { speed: 1.8, up: 1.4, life: 0.7, color: ['#ffffff', '#fff3c4', '#e8e8ff'], size: 2.2, gravity: -1, drag: 3, spread: 0.6 }); },
     sparkle(x, y, z) { emit('d', x, y + 0.1, z, 26, { speed: 1.4, up: 3, life: 0.8, color: ['#ffd400', '#ffffff', '#fff3a0'], size: 0.8, gravity: 4 }); },

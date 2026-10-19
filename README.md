@@ -5,9 +5,9 @@
 Press **?** any time (or tap the round **?** button on the left edge) to see the keys. The game waits while you look.
 Tap the language button under it (the A文 icon) to switch between English and 中文; the dashboard and every game remember the choice.
 
-**中文：** 3D 迷你高尔夫：和 Teddy、Tommy 一起在阳光花园打 9 个球洞，有坡道、蘑菇弹弹、大风车、移动小桥和大回环。
+**中文：** 3D 迷你高尔夫：和 Teddy、Tommy 一起在阳光花园和糖果乐园打球洞，有坡道、蘑菇弹弹、大风车、移动小桥和大回环。
 
-A 3D mini golf course in a sunny garden, starring Teddy and Tommy. Pull back from the ball like a slingshot and let go to putt. Nine holes get trickier as you go: a straight green, a dog-leg, a ramp, mushroom bumpers, a sandy snake, a windmill whose sails block the door, a sliding bridge over a stream, a hill with two tunnels, and a loop-the-loop. Play alone or take turns with your brother on one device, and call him over any time for a tip.
+3D mini golf starring Teddy and Tommy. Pull back from the ball like a slingshot and let go to putt. The Sunny Garden's nine holes get trickier as you go: a straight green, a dog-leg, a ramp, mushroom bumpers, a sandy snake, a windmill whose sails block the door, a sliding bridge over a stream, a hill with two tunnels, and a loop-the-loop. A second course, Candy Land, has nine more. Play alone or take turns with your brother on one device, and call him over any time for a tip.
 It's built with Claude Code from plain JavaScript and Three.js, in the same style as Metro Surfer and the other Teddy & Tommy games. There are no image, model or audio files: the course is boxes, spheres and canvas-painted textures, the characters come from the shared kit (`kit/`), and every sound is synthesised.
 
 The name lives in one place, [js/title.js](js/title.js). "TT Mini Golf" is a working title until Alan names it.
@@ -18,8 +18,8 @@ The name lives in one place, [js/title.js](js/title.js). "TT Mini Golf" is a wor
 - **Send one file:** `dist/mini-golf-tt.html` is the whole game in one file. AirDrop or email it, then open it in a browser.
 - **Rebuild that file** after any edit: `python3 kit/tools/bundle.py . --name mini-golf-tt`
 - **Get kit updates** from `~/claude-games/kit`: `python3 ../kit/tools/sync.py .`, then rebuild.
-- **On the title screen** pick 1 PLAYER or 2 PLAYERS, each golfer with ◀ ▶ (Teddy, Tommy and the rest of the kit's cast), and 🐣 EASY or 🔥 NORMAL for each golfer. Then ▶ PLAY.
-- **Saved per browser:** 1 or 2 players, the golfers picked, each golfer's EASY/NORMAL, and each golfer's best round (fewest strokes) per level. `index.html` and `dist/mini-golf-tt.html` each keep their own, because they're different ways of opening the game.
+- **On the title screen** pick 1 PLAYER or 2 PLAYERS, each golfer with ◀ ▶ (Teddy, Tommy and the rest of the kit's cast), 🐣 EASY or 🔥 NORMAL for each golfer, and the course: 🌻 SUNNY GARDEN or 🍭 CANDY LAND. Then ▶ PLAY.
+- **Saved per browser:** 1 or 2 players, the golfers picked, the course, each golfer's EASY/NORMAL, and each golfer's best round (fewest strokes) per course and level. `index.html` and `dist/mini-golf-tt.html` each keep their own, because they're different ways of opening the game.
 
 ### EASY and NORMAL
 
@@ -58,13 +58,27 @@ The Sunny Garden course, par 26. Every hole is our own design, drawn as data in 
 | 8 | Tunnel Hill | 3 | a grassy hill with two tunnels. The left one comes out near the cup, the right one by the pond |
 | 9 | Loop-the-Loop | 3 | a funnel into a clear loop tube: hit it hard and the ball goes round and comes out on the last green. Too soft and it rolls back to you |
 
+The Candy Land course, par 25: the same tricks in sweeter places. Sugar is the sand, the river is chocolate, the bumpers are gumdrops, and lollipops, gumdrops and candy canes stand round a candy-cane fence.
+
+| # | Hole | Par | What's there |
+|---|---|---|---|
+| 1 | Lollipop Lane | 2 | a straight green with a little hill in the middle |
+| 2 | Gumdrop Zigzag | 3 | a Z-shaped green with two gumdrop bumpers on the corners |
+| 3 | Chocolate River | 3 | a wider chocolate river and a faster, wider-swinging bridge |
+| 4 | Sugar Dunes | 3 | two sugar dunes (round hills) and three sugar traps |
+| 5 | Candy Mill | 3 | a pink windmill with faster sails, and a gumball in front of the cup |
+| 6 | Rainbow Ramp | 3 | up a ramp, across the top past a gumdrop, and down the other side |
+| 7 | Marshmallow Hill | 3 | a marshmallow hill with three tunnels; the left one comes out by the chocolate pond |
+| 8 | Cupcake Bowl | 2 | a big bowl that rolls everything toward the cup in its middle, ringed with gumdrops, a gumball guarding the way in |
+| 9 | Sprinkle Loop | 3 | the loop-the-loop again, coming out to the left, with two gumdrops on the last green |
+
 ### The physics
 
 Our own, in [js/physics.js](js/physics.js), with no library and no Three.js:
 
 - **A fixed 120 Hz step.** Each frame adds its time to a store and the physics takes as many 1/120 s steps as fit, so a putt plays exactly the same at 30, 60 or 120 frames a second.
 - **Rolling:** rolling resistance plus a drag that grows with speed, so a full-power putt rolls about 18 m on the flat. Sand slows it about six times as hard.
-- **Slopes and ramps:** each part of a hole can be a tilted plane; a rolling ball feels 5/7 of gravity along the slope.
+- **Slopes and ramps:** each part of a hole can be a tilted plane, and round hills and bowls can sit on top; a rolling ball feels 5/7 of gravity along the slope.
 - **Walls** bounce the ball back at 70 % of its speed (and a ball resting against a wall doesn't keep bouncing). Bumpers always send it off at 2.2 m/s or more. Rocks are softer.
 - **The cup** is a little dip that pulls a passing ball toward its middle, so near misses curl. It catches a ball over its middle going slower than 1.9 m/s (2.6 on EASY).
 - **Water:** the ball comes back to where you hit it from, with a splash and one stroke added.
@@ -104,20 +118,26 @@ Tap the big orange button with your brother's face (bottom right) or press **T**
 
 **Headless, in Node:** `node tools/check.js` runs the page's own `js/physics.js`, `js/courses.js`, `js/autopilot.js` and `js/checks.js` without a browser. In the page the same checks run as `game.check()`.
 
+- Both courses, all 18 holes, are checked the same way.
 - **Every hole is solvable:** the autopilot (thousands of trial putts per stroke, scored by the distance still to go along the course, waiting for the sails or the bridge when it wants) sinks every hole within par + 1 on NORMAL's small cup with no magnet. It needs 1 or 2 strokes on each.
-- **Random soak:** 1,000 random putts per hole (9,000 in all; random direction, power and moment, one after another from wherever the ball stops). The ball never left the course, never went NaN, and always stopped (the longest roll took 11.8 s; the 30 s safety stop never fired).
+- **Random soak:** 1,000 random putts per hole (18,000 in all; random direction, power and moment, one after another from wherever the ball stops). The ball never left the course, never went NaN, and always stopped (the longest roll took 11.8 s; the 30 s safety stop never fired).
   - The soak earned its keep: it found a ball that crept to the very top of the loop and stayed there, held by rolling friction, upside down. Friction in the tube now fades out when the ball is slow, so gravity always wins, and the safety stop also covers the loop. Every entry speed from 3 to 6 m/s (in 1 mm/s steps) now leaves the loop within 3.7 s.
 - **Frame rate:** four putts per hole, stepped in frames of 1/30, 1/60 and 1/120 s, end at exactly the same spot (`===` on the coordinates) and the same way (stopped, in the cup or in the water).
 - **The check can fail:** `node tools/check.js --fail` walls in hole 1's cup with a ring of rocks, and the solvable check reports it NOT sunk, as it should.
 
 **How hard is it for a kid?** `node tools/kids.js` plays every hole with a "kid bot" that takes the buddy's tip and then wobbles it, hitting at a random moment:
 
-| Golfer (a wobble on every putt) | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | Total (par 26) |
+| Sunny Garden (a wobble on every putt) | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | Total (par 26) |
 |---|---|---|---|---|---|---|---|---|---|---|
 | EASY, ±12° and ±30 % | 1.7 | 2.0 | 2.2 | 2.7 | 3.0 | 3.7 | 3.3 | 3.8 | 3.3 | 25.7 |
 | NORMAL, ±6° and ±15 % | 2.3 | 2.2 | 2.0 | 2.2 | 2.7 | 3.0 | 2.3 | 2.7 | 2.3 | 21.7 |
 
-Averages of 6 rounds. On EASY the ball was put in after 6 strokes once on the Bridge and twice on the Loop. The bot takes the tip on every putt, so it is a kid who calls his brother every time; without tips it would be harder.
+| Candy Land | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | Total (par 25) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| EASY, ±12° and ±30 % | 1.8 | 3.8 | 3.3 | 2.8 | 4.5 | 2.3 | 3.7 | 2.5 | 5.0 | 29.8 |
+| NORMAL, ±6° and ±15 % | 2.2 | 3.2 | 3.7 | 2.2 | 4.0 | 2.0 | 2.8 | 1.8 | 3.2 | 25.0 |
+
+Averages of 6 rounds. Candy Land is the harder course. On EASY the ball was put in after 6 strokes once on the Bridge and twice on the Loop (Garden), and six times across Candy Land's river, mill, hill and loop; on NORMAL it hit the 10-stroke limit once, at the Candy Mill. The bot takes the tip on every putt, so it is a kid who calls his brother every time; without tips it would be harder.
 
 **In the Browser pane** (time driven by `game.step()`, because the hidden pane throttles `requestAnimationFrame`):
 
@@ -145,11 +165,11 @@ game.info()                                      // state, turn, strokes, scores
 index.html          page, HUD and screens (CSS inline)
 js/title.js         the game's name, in one place
 js/physics.js       the ball physics: fixed 120 Hz steps, slopes, walls, bumpers, sand, water, cup, windmill, bridge, loop
-js/courses.js       the holes, as data, and each course's colours
+js/courses.js       the holes of both courses, as data, and each course's colours
 js/autopilot.js     the distance map along the course, the shot search (the buddy's tip), autoplay
 js/checks.js        solvable / soak / frame-rate / blocked-cup checks (game.check() and tools/check.js)
 js/sfx.js           putt, wall, bumper, cup, splash, sand, loop, cheer, fanfare... on Kit.sound.tone / hiss
-js/scene.js         Three.js: the hole meshes, garden, windmill, bridge, loop tube, tunnel hill, balls, aim guide,
+js/scene.js         Three.js: the hole meshes, the garden or candy props, windmill, bridge, loop tube, tunnel hill, balls, aim guide,
                     hint line, particles, golfers with putters, camera
 js/buddy.js         the brother's visit: pop in, signature move, treat, tip, goodbye
 js/game.js          title, turns, input, strokes, EASY/NORMAL, scorecard, celebrations, HUD, main loop, window.game

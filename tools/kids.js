@@ -1,6 +1,7 @@
 // TT Mini Golf: how hard is it for a kid? A "kid bot" picks a decent shot (the autopilot's, without waiting for the
 // windmill or the bridge), then wobbles it: a random aim and power error, hit at a random moment.
-//   node tools/kids.js                  EASY with a big wobble (±12°, ±30 %) and NORMAL with a smaller one (±6°, ±15 %)
+//   node tools/kids.js [games] [course]   EASY with a big wobble (±12°, ±30 %) and NORMAL with a smaller one (±6°, ±15 %)
+//   node tools/kids.js 6 candy           just one course
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -27,7 +28,7 @@ function play(H, level, wob, rand) {
   return { strokes: limit, placed: true };
 }
 
-for (const course of ctx.MG.courses) {
+for (const course of ctx.MG.courses.filter((c) => !process.argv[3] || c.id === process.argv[3])) {
   console.log(`\n== ${course.name}: average strokes over ${games} games per hole ==`);
   for (const [level, wob] of [['easy', { aim: 12, power: 0.3 }], ['normal', { aim: 6, power: 0.15 }]]) {
     const rand = checks.rng(level === 'easy' ? 11 : 22);

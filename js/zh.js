@@ -8,13 +8,16 @@
   const HOLES = {
     'Hello Green': '你好草坪', 'Dog Leg': '狗腿弯道', 'Up the Ramp': '爬上坡道', 'Bumper Garden': '蘑菇弹弹园', 'Sandy Snake': '沙坑蛇形道',
     'Windmill': '大风车', 'Bridge': '移动小桥', 'Tunnel Hill': '山洞小山', 'Loop-the-Loop': '大回环',
+    'Lollipop Lane': '棒棒糖小路', 'Gumdrop Zigzag': '软糖之字路', 'Chocolate River': '巧克力河', 'Sugar Dunes': '糖粉沙丘',
+    'Candy Mill': '糖果风车', 'Rainbow Ramp': '彩虹坡道', 'Marshmallow Hill': '棉花糖山', 'Cupcake Bowl': '纸杯蛋糕碗',
+    'Sprinkle Loop': '彩糖大回环',
   };
   L.add(HOLES);
   L.add({
     // title screen
     'Drag back from the ball and let go to putt! Call your brother for a tip.': '从球往后拉，松手就推杆！还可以叫兄弟来出主意。',
     'How many players': '几个人玩', 'YOUR GOLFER': '你的球手', 'Previous': '上一个', 'Next': '下一个', 'How hard': '难度',
-    '🐣 EASY': '🐣 简单', '🔥 NORMAL': '🔥 普通', 'Course': '球场', '🌻 SUNNY GARDEN': '🌻 阳光花园', 'ZOMBIE': '僵尸',
+    '🐣 EASY': '🐣 简单', '🔥 NORMAL': '🔥 普通', 'Course': '球场', '🌻 SUNNY GARDEN': '🌻 阳光花园', '🍭 CANDY LAND': '🍭 糖果乐园', 'ZOMBIE': '僵尸',
     '🖱️ drag back from the ball, let go to putt': '🖱️ 从球往后拉，松手推杆',
     'aim, hold': '瞄准，按住', 'for power': '蓄力', 'call your brother': '叫兄弟来帮忙', 'whole hole': '看整个球洞',
     '👆 drag back from the ball and let go, or tap where to go and hold': '👆 从球往后拉再松手；或者点一下要去的地方，再按住',
